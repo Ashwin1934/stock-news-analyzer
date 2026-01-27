@@ -1,0 +1,1 @@
+- Look into Prom / Grafana monitoring of the containers as well as CPU / GPU statistics.

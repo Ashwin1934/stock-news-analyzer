@@ -1,0 +1,13 @@
+server:
+  mode: uds
+  uds_path: /tmp/inference.sock
+  max_workers: 10
+  max_message_size: 10485760  # 10MB
+
+inference:
+  model_type: finbert
+  device: cuda
+  batch_size: 32
+
+logging:
+  level: INFO

@@ -1,0 +1,14 @@
+server:
+  mode: tcp
+  host: 0.0.0.0
+  port: 50051
+  max_workers: 10
+  max_message_size: 10485760  # 10MB
+
+inference:
+  model_type: finbert
+  device: cuda
+  batch_size: 32
+
+logging:
+  level: INFO
