@@ -9,6 +9,7 @@ import logging
 import os
 import sys
 import yaml
+from src.factory import create_inference_service
 
 # Add generated proto files to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'generated'))
@@ -128,7 +129,7 @@ def serve(config):
     mode = server_config['mode']
     
     # Initialize inference service
-    inference_service = InferenceService(config.get('inference', {}))
+    inference_service = create_inference_service(config.get('inference', {}))
     
     # Create gRPC server
     max_workers = server_config.get('max_workers', 10)
