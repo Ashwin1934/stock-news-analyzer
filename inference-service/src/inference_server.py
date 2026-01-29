@@ -23,32 +23,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# TODO make this an interface for different inference models, should come from config
-class InferenceService:
-    """Handles headline processing"""
-    
-    def __init__(self, config):
-        self.config = config
-        logger.info("InferenceService initialized")
-    
-    def process_batch(self, headlines):
-        """
-        Process a batch of headlines
-        
-        Args:
-            headlines: List of HeadlineRequest objects
-        """
-        logger.info(f"Processing batch of {len(headlines)} headlines")
-        
-        for headline in headlines:
-            self._process_single(headline.headline, headline.timestamp)
-    
-    def _process_single(self, headline_text, timestamp):
-        """Process a single headline"""
-        logger.debug(f"Processing: {headline_text[:100]}...")
-        # TODO: Add your inference logic here
-        pass
-
 
 class HeadlineServicer(headline_pb2_grpc.HeadlineServiceServicer):
     """gRPC servicer for headline ingestion"""
