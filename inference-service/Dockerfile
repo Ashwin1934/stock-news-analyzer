@@ -14,12 +14,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project files
 COPY protos/ ./protos/
 COPY config/ ./config/
-COPY scripts/ ./scripts/
+COPY generated/ ./generated/
 COPY src/ ./src/
-
-# Generate proto files
-RUN chmod +x scripts/generate_protos.sh && \
-    scripts/generate_protos.sh
 
 # Default profile
 ENV APP_PROFILE=tcp

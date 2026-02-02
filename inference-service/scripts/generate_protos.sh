@@ -13,7 +13,7 @@ python -m grpc_tools.protoc \
     -I"$PROJECT_DIR/protos" \
     --python_out="$PROJECT_DIR/generated" \
     --grpc_python_out="$PROJECT_DIR/generated" \
-    "$PROJECT_DIR/protos/headline.proto"
+    "$PROJECT_DIR/protos/headlines.proto"
 
 # Create __init__.py
 touch "$PROJECT_DIR/generated/__init__.py"
