@@ -9,6 +9,7 @@ import logging
 import os
 import sys
 import yaml
+from src.factory import create_inference_service
 
 # Add generated proto files to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'generated'))
@@ -21,32 +22,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-# TODO make this an interface for different inference models, should come from config
-class InferenceService:
-    """Handles headline processing"""
-    
-    def __init__(self, config):
-        self.config = config
-        logger.info("InferenceService initialized")
-    
-    def process_batch(self, headlines):
-        """
-        Process a batch of headlines
-        
-        Args:
-            headlines: List of HeadlineRequest objects
-        """
-        logger.info(f"Processing batch of {len(headlines)} headlines")
-        
-        for headline in headlines:
-            self._process_single(headline.headline, headline.timestamp)
-    
-    def _process_single(self, headline_text, timestamp):
-        """Process a single headline"""
-        logger.debug(f"Processing: {headline_text[:100]}...")
-        # TODO: Add your inference logic here
-        pass
 
 
 class HeadlineServicer(headline_pb2_grpc.HeadlineServiceServicer):
@@ -128,7 +103,7 @@ def serve(config):
     mode = server_config['mode']
     
     # Initialize inference service
-    inference_service = InferenceService(config.get('inference', {}))
+    inference_service = create_inference_service(config.get('inference', {}))
     
     # Create gRPC server
     max_workers = server_config.get('max_workers', 10)
