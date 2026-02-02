@@ -1,0 +1,13 @@
+# UDS (Unix Domain Socket) configuration for headlines client
+server:
+  mode: uds
+  uds_path: /tmp/inference.sock
+  max_workers: 10
+  max_message_size: 10485760
+
+# FinnHub configuration
+symbols:
+  - AAPL
+  - MSFT
+
+poll_interval: 2
