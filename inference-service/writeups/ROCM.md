@@ -165,3 +165,81 @@ The difference you'll see:
 3. **application-experiment2.yaml**: Changed device from `cuda` to `rocm`
 
 Now my inference service supports both CPU and GPU (via ROCm) with zero code changes - just configuration switching.
+
+## Practical Questions
+
+### Question: Model Size > GPU VRAM - Where Do Input Tensors Actually Go?
+
+**My Question:**
+Let's say the model size is greater than 4GB, which exceeds the GPU VRAM. We then say that we are putting the rest into system RAM, via the 7.9GB of sharable memory. My question is related to the inference step, "move input tensors to GPU". Are we really moving it to the GPU VRAM? Or are we simply keeping it in the system RAM, which is available to the GPU? Wouldn't this be faster than actually having to move the tensors?
+
+**Initial Answer:**
+
+When you call `.to(device)` on a tensor with ROCm:
+
+1. **PyTorch checks available GPU VRAM** - "Do I have space in the 4GB?"
+2. **If YES** - Moves tensor to GPU VRAM (fast execution)
+3. **If NO** - Keeps it in system RAM (slower execution, but avoids unnecessary copying)
+
+The GPU can directly access system RAM through the unified memory architecture. So ROCm intelligently decides:
+- Move to VRAM if there's space (fastest)
+- Keep in system RAM if VRAM is full (avoids the copy overhead)
+
+**Why keeping it in system RAM is actually faster in the full-model case:**
+
+```
+Scenario 1: Model in VRAM, Inputs in VRAM
+├─ Input: Already in fast VRAM
+├─ Model weights: Already in fast VRAM
+├─ Execution: Very fast
+└─ Total: Minimal overhead
+
+Scenario 2: Model spilled to system RAM, Inputs moved to VRAM
+├─ Input: Copy to VRAM (overhead!)
+├─ Model weights: Must fetch from system RAM during execution (slow!)
+├─ Execution: Slow (constant system RAM access)
+└─ Total: High overhead (extra copy + slow execution)
+
+Scenario 3: Model spilled to system RAM, Inputs stay in system RAM
+├─ Input: Already in system RAM
+├─ Model weights: In system RAM
+├─ Execution: Slower than Scenario 1, but no copying overhead
+└─ Total: Better than Scenario 2
+```
+
+**My Follow-up Correction:**
+But for scenario 3, aren't only some of the model weights in system RAM? Aren't some in GPU VRAM?
+
+**Corrected Explanation:**
+
+Yes, that's absolutely correct! Here's the more accurate picture:
+
+**Scenario 3 (corrected): Model split between VRAM and system RAM, Inputs in system RAM**
+
+```
+├─ Model weights distribution:
+│  ├─ 4GB in GPU VRAM (fast)
+│  └─ 1GB in system RAM (slower)
+│
+├─ Input tensors: In system RAM
+│
+├─ Execution: 
+│  ├─ When GPU needs weights from VRAM: Fast access
+│  ├─ When GPU needs weights from system RAM: Slower access
+│  ├─ When GPU needs input data: Slower access (also system RAM)
+│
+└─ Total: Variable speed depending on which weights are accessed
+```
+
+So yes, during inference:
+- Some weight fetches hit fast GPU VRAM → fast
+- Some weight fetches hit system RAM → slower
+- All input fetches hit system RAM → slower
+
+The benefit of keeping inputs in system RAM (rather than copying them) is still that you **avoid the copy overhead**. But you're correct that you don't get the speed benefit of having everything in VRAM.
+
+**The tradeoff is:**
+- Moving inputs to VRAM: Costs time for copying + wastes limited VRAM space
+- Keeping inputs in system RAM: No copy cost, but still slow access during execution
+
+Given that inputs are typically much smaller than the model itself, keeping them in system RAM is usually the right choice. But it's definitely a slower scenario than having everything in VRAM.
