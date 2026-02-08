@@ -1,0 +1,16 @@
+server:
+  mode: uds
+  uds_path: /tmp/inference.sock
+  max_workers: 10
+  max_message_size: 10485760  # 10MB
+
+inference:
+  implementation: finbert
+  model_name: "ProsusAI/finbert"  # HuggingFace model identifier
+  device: rocm  # Use ROCm for AMD GPUs
+  batch_size: 64  # Larger batch size for GPU
+  max_sequence_length: 128
+  num_labels: 3  # positive, negative, neutral
+
+logging:
+  level: INFO
