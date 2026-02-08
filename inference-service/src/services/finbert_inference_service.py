@@ -41,8 +41,8 @@ class FinBertInferenceService(InferenceService):
         
         # Validate device
         device = inference_config['device']
-        if device not in ['cpu', 'cuda']:
-            raise ValueError(f"Device must be 'cpu' or 'cuda', got '{device}'")
+        if device not in ['cpu', 'cuda', 'rocm']:
+            raise ValueError(f"Device must be 'cpu', 'cuda', or 'rocm', got '{device}'")
         
         # Validate batch_size
         if inference_config['batch_size'] <= 0:
@@ -212,8 +212,11 @@ class FinBertInferenceService(InferenceService):
             del self.tokenizer
             self.tokenizer = None
         
-        # Clear CUDA cache if using GPU
-        if self.device and self.device.type == 'cuda':
-            torch.cuda.empty_cache()
+        # Clear GPU cache if using GPU
+        if self.device and self.device.type in ['cuda', 'rocm']:
+            if self.device.type == 'cuda':
+                torch.cuda.empty_cache()
+            elif self.device.type == 'rocm':
+                torch.cuda.empty_cache()  # ROCm uses the same interface
         
         logger.info("Cleanup complete")
