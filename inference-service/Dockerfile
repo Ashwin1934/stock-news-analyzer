@@ -23,4 +23,4 @@ ENV APP_PROFILE=tcp
 # Expose ports
 EXPOSE 50051
 
-CMD ["python", "src/inference_server.py"]
+CMD ["python", "-m", "src.inference_server"]

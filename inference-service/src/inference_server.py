@@ -14,8 +14,10 @@ from src.factory import create_inference_service
 # Add generated proto files to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'generated'))
 
-import headline_pb2
-import headline_pb2_grpc
+# Generated modules are named `headlines_pb2`/`headlines_pb2_grpc`.
+# Import them under the legacy names used throughout this file.
+import headlines_pb2 as headline_pb2
+import headlines_pb2_grpc as headline_pb2_grpc
 
 logging.basicConfig(
     level=logging.INFO,
@@ -102,8 +104,8 @@ def serve(config):
     server_config = config['server']
     mode = server_config['mode']
     
-    # Initialize inference service
-    inference_service = create_inference_service(config.get('inference', {}))
+    # Initialize inference service (pass full configuration dict)
+    inference_service = create_inference_service(config)
     
     # Create gRPC server
     max_workers = server_config.get('max_workers', 10)

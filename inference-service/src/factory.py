@@ -16,12 +16,15 @@ def create_inference_service(config) -> InferenceService:
     Raises:
         ValueError: If model_type is unknown or missing
     """
-    model_type = config.get('inference', {}).get('model_type')
-    
-    if not model_type:
-        raise ValueError("Missing 'inference.model_type' in configuration")
-    
-    if model_type == 'finbert':
+    # Expect a full config dict; `inference` sub-dict contains model settings
+    inference_config = config.get('inference', {})
+    # Prefer explicit 'implementation' (used in configs). Fall back to legacy 'model_type'.
+    implementation = inference_config.get('implementation') or inference_config.get('model_type')
+
+    if not implementation:
+        raise ValueError("Missing 'inference.implementation' (or 'inference.model_type') in configuration")
+
+    if implementation == 'finbert':
         logger.info("Creating FinBERT inference service")
         return FinBertInferenceService(config)
     # Add more model types here as you implement them:
