@@ -243,3 +243,6 @@ The benefit of keeping inputs in system RAM (rather than copying them) is still 
 - Keeping inputs in system RAM: No copy cost, but still slow access during execution
 
 Given that inputs are typically much smaller than the model itself, keeping them in system RAM is usually the right choice. But it's definitely a slower scenario than having everything in VRAM.
+
+## Image Sizes
+Note that the image I built with ROCm support is ~42GB on docker desktop... so I built a separate image that uses ```FROM python:3.10-slim``` instead of ```rocm/pytorch:latest```. The end result was a cpu based image of ~12GB. This shouldn't affect the runtime but is good to know for dev ops and cloud purposes, since pushing/pulling/storing a huge image is painful and costly. Just good to know, will still need the ROCm image for the main experiments.

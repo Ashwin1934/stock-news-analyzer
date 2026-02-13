@@ -16,8 +16,8 @@ from dotenv import load_dotenv
 # Add generated proto files to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'generated'))
 
-import headline_pb2
-import headline_pb2_grpc
+import headlines_pb2
+import headlines_pb2_grpc
 
 logging.basicConfig(
     level=logging.INFO,
@@ -59,18 +59,20 @@ class HeadlinesStreamClient:
         
         if self.mode == 'uds':
             # For Unix Domain Sockets
-            self.channel = grpc.aio.secure_channel(
+            self.channel = grpc.secure_channel(
                 address,
                 grpc.local_channel_credentials()
             )
         else:
             # For TCP
-            self.channel = grpc.aio.insecure_channel(address)
+            host = self.server_config.get('host', 'localhost')
+            port = self.server_config.get('port', 50051)
+            self.channel = grpc.insecure_channel(f'{host}:{port}')
         
-        self.stub = headline_pb2_grpc.HeadlineServiceStub(self.channel)
+        self.stub = headlines_pb2_grpc.HeadlineServiceStub(self.channel)
         logger.info("Connected to server successfully")
     
-    def _headline_batch_generator(self) -> Iterator[headline_pb2.HeadlineBatch]:
+    def _headline_batch_generator(self) -> Iterator[headlines_pb2.HeadlineBatch]:
         """
         Generator that yields headline batches from FinnHub
         Runs continuously, polling every poll_interval seconds
@@ -97,7 +99,7 @@ class HeadlinesStreamClient:
                         # Only include if we haven't seen this exact headline before
                         if headline_id not in last_headlines[symbol]:
                             all_headlines.append(
-                                headline_pb2.HeadlineRequest(
+                                headlines_pb2.HeadlineRequest(
                                     headline=headline_text,
                                     timestamp=timestamp,
                                     symbol=symbol,
@@ -118,7 +120,7 @@ class HeadlinesStreamClient:
             
             if all_headlines:
                 logger.info(f"Yielding batch with {len(all_headlines)} new headlines")
-                yield headline_pb2.HeadlineBatch(
+                yield headlines_pb2.HeadlineBatch(
                     headlines=all_headlines,
                     batch_timestamp=batch_timestamp
                 )
